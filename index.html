@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>For Safae ✨</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-pink: #ff9eaa;
+            --secondary-pink: #ffb6c1;
+            --gold: #ffd700;
+            --bg-color: #0d0d1a;
+        }
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: var(--bg-color);
+            color: white;
+            font-family: 'Poppins', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+        }
+
+        #bg-canvas, #interaction-canvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        #interaction-canvas { z-index: 9999; } /* Highest z-index for sparkles and confetti */
+
+        .screen {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 1.5s ease-in-out, visibility 1.5s;
+            z-index: 10;
+        }
+
+        .screen.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Typography & Effects */
+        .font-cinzel { font-family: 'Cinzel', serif; }
+        .text-glow { text-shadow: 0 0 15px var(--primary-pink), 0 0 30px var(--secondary-pink); }
+        .text-gold-glow { text-shadow: 0 0 10px rgba(255, 215, 0, 0.8), 0 0 20px rgba(255, 215, 0, 0.4); color: var(--gold); }
+        
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        /* Interactive Elements */
+        .btn-magical {
+            background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0));
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: 0 8px 32px 0 rgba(0,0,0,0.3);
+            color: white;
+            padding: 15px 40px;
+            border-radius: 30px;
+            font-size: 1.2rem;
+            font-family: 'Cinzel', serif;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+            pointer-events: auto;
+        }
+
+        .btn-magical::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%; width: 50%; height: 100%;
+            background: linear-gradient(to right, transparent, rgba(255,255,255,0.3), transparent);
+            transform: skewX(-20deg);
+            transition: 0.5s;
+        }
+
+        .btn-magical:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 40px 0 rgba(255, 158, 170, 0.4);
+            border-color: var(--primary-pink);
+        }
+
+        .btn-magical:hover::before { left: 150%; }
+
+        @keyframes heartbeat {
+            0% { transform: scale(1); }
+            14% { transform: scale(1.1); }
+            28% { transform: scale(1); }
+            42% { transform: scale(1.1); }
+            70% { transform: scale(1); }
+        }
+        .animate-heartbeat { animation: heartbeat 2s infinite; }
+
+        @keyframes float {
+            0% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-15px) rotate(5deg); }
+            100% { transform: translateY(0px) rotate(0deg); }
+        }
+        .animate-float { animation: float 4s ease-in-out infinite; }
+
+        /* Specific Screen Styles */
+        #intro .text-line {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 1s, transform 1s;
+            position: absolute;
+            text-align: center;
+            width: 90%;
+            font-size: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            #intro .text-line { font-size: 1.2rem; }
+            .cat-svg { width: 60px; height: 60px; }
+            .cat-compliment { font-size: 0.85rem; padding: 10px 15px; white-space: normal; width: 220px; line-height: 1.4; }
+            .btn-magical { font-size: 1rem; padding: 12px 24px; }
+            #final-message { padding: 1.5rem !important; max-height: 80vh; overflow-y: auto; width: 90% !important; }
+            #final-message h2 { font-size: 2rem !important; margin-bottom: 1rem !important; }
+            #finale-text-content p { font-size: 0.95rem; }
+            #finale-text-content .text-2xl { font-size: 1.2rem !important; }
+            #finale-text-content .text-3xl { font-size: 1.5rem !important; }
+        }
+
+        #garden {
+            background: linear-gradient(to bottom, #0f172a 0%, #1e1b4b 50%, #064e3b 100%);
+            transition: background 3s ease;
+        }
+
+        .cat-container {
+            position: absolute;
+            cursor: pointer;
+            transition: transform 0.3s, left 1.5s cubic-bezier(0.4, 0, 0.2, 1), top 1.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 1s;
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.4));
+            pointer-events: auto;
+        }
+        
+        .cat-container:hover { transform: scale(1.15) translateY(-5px); }
+        .cat-svg { width: 90px; height: 90px; }
+        @media (max-width: 768px) { .cat-svg { width: 70px; height: 70px; } }
+
+        .cat-compliment {
+            opacity: 0;
+            background: rgba(255, 255, 255, 0.95);
+            color: #d81b60;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-top: 15px;
+            text-align: center;
+            pointer-events: none;
+            transition: opacity 0.5s, transform 0.5s;
+            transform: translateY(15px) scale(0.9);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            white-space: nowrap;
+            border: 2px solid #ffb6c1;
+            z-index: 100;
+        }
+
+        #bouquet-container {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 30;
+            text-align: center;
+            transform: scale(0.8);
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* Mini Game Styles */
+        #game-ui {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 110;
+        }
+
+        #mini-game-canvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 105;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.5s;
+        }
+
+        /* Final Sequence */
+        #final-message {
+            max-width: 600px;
+            padding: 2rem;
+            text-align: center;
+            line-height: 1.8;
+            font-size: 1.2rem;
+        }
+        
+        .fade-in-up {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 1.5s, transform 1.5s;
+        }
+        
+        .fade-in-up.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+    </style>
+</head>
+<body>
+    
+    <!-- Physical Audio Element (Most reliable method for iOS/Mobile Safari) -->
+    <audio id="main-music" src="Borrow_Your_Sweet_Eyes_4.mp3" loop preload="auto"></audio>
+
+    <!-- Audio Trigger Overlay: The absolute most reliable way to start audio -->
+    <div id="start-overlay" class="fixed inset-0 z-[9999] bg-black flex flex-col items-center justify-center transition-opacity duration-1000">
+        <div class="text-5xl md:text-6xl text-pink-400 animate-heartbeat mb-6 md:mb-8">✨</div>
+        <h1 class="font-cinzel text-2xl md:text-4xl text-pink-300 tracking-widest text-glow text-center px-4 mb-6 md:mb-8 leading-snug">A Magical World Awaits</h1>
+        <button id="btn-start-music" class="btn-magical" style="background: linear-gradient(135deg, #ff9eaa, #ff6b81); border-color: #fff;">
+            Start Music & Enter 🔊
+        </button>
+    </div>
+
+    <!-- Background Canvas (Stars, Magic) -->
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- Intro Sequence -->
+    <section id="intro" class="screen">
+        <div id="intro-text-container" class="relative w-full h-full flex items-center justify-center">
+            <h1 class="text-line font-cinzel text-glow text-white">This isn't just a website...</h1>
+            <h1 class="text-line font-cinzel text-glow text-white">It's a little world...</h1>
+            <h1 class="text-line font-cinzel text-glow text-pink-300">Created especially for Safae.</h1>
+            <h1 class="text-line font-cinzel text-glow text-white">For one of the sweetest souls.</h1>
+        </div>
+        <button id="btn-enter-garden" class="btn-magical absolute bottom-20 opacity-0 transform translate-y-10">
+            ✨ Enter Her World ✨
+        </button>
+    </section>
+
+    <!-- Magical Garden -->
+    <section id="garden" class="screen">
+        <div id="garden-instruction" class="absolute top-20 text-center w-full z-40 pointer-events-none transition-opacity duration-1000 text-white font-cinzel text-2xl text-glow drop-shadow-lg">
+            Tap the kittens to see what they found...
+        </div>
+        
+        <div id="cats-container" class="absolute inset-0 z-20"></div>
+
+        <div id="bouquet-container">
+            <div class="text-6xl mb-2" style="filter: drop-shadow(0 0 10px #ff69b4);">💐</div>
+            <div class="glass-panel px-4 py-2 font-poppins text-pink-200">
+                Flowers: <span id="flower-count" class="font-bold text-white">0</span>/3
+            </div>
+        </div>
+
+        <button id="btn-start-game" class="btn-magical absolute bottom-12 z-40 hidden shadow-[0_10px_30px_rgba(255,105,180,0.4)]" style="background: linear-gradient(135deg, #ff9eaa, #ff6b81); border-color: #fff;">
+            Help The Kittens Bake 🍰
+        </button>
+    </section>
+
+    <!-- Mini Game Area -->
+    <div id="mini-game-wrapper" class="absolute inset-0 z-[105] hidden">
+        <div id="game-ui" class="glass-panel p-5 md:p-8 text-center max-w-lg w-[90%] mb-6 text-white shadow-2xl border-white/30 flex flex-col items-center">
+            <h2 class="font-cinzel text-2xl md:text-3xl mb-4 text-gold drop-shadow-md">Cooking With Kittens 🍰</h2>
+            <p class="font-poppins text-sm md:text-base mb-6 text-gray-200">Safae, the kittens want to bake a cake for you! Move your finger/mouse to catch the sweet ingredients (🍓, 🍫, 🧁) in the bowl. Avoid spicy peppers! Collect <span class="text-pink-300 font-bold">5</span> sweets.</p>
+            <button id="btn-actually-start" class="btn-magical w-full text-sm md:text-lg">Start Cooking ✨</button>
+        </div>
+        <canvas id="mini-game-canvas"></canvas>
+    </div>
+
+    <!-- Final Sequence -->
+    <section id="finale" class="screen" style="background: radial-gradient(circle at center, #1a0b2e 0%, #000000 100%);">
+        <div id="final-message" class="glass-panel text-left relative overflow-hidden z-20 shadow-[0_0_50px_rgba(255,105,180,0.2)]">
+            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-transparent via-pink-400 to-transparent"></div>
+            <h2 class="font-cinzel text-4xl text-pink-300 mb-8 text-glow text-center">Dear Safae,</h2>
+            
+            <div id="finale-text-content" class="font-poppins text-gray-200 space-y-4">
+                <p class="fade-in-up">We searched every flower garden.</p>
+                <p class="fade-in-up">We searched every star.</p>
+                <p class="fade-in-up">We searched every rainbow...</p>
+                <p class="fade-in-up text-pink-200 font-semibold">Looking for something more beautiful than you.</p>
+                <p class="fade-in-up">But we couldn't.</p>
+                <p class="fade-in-up">Because your smile is one of a kind. Your kindness makes this world softer.</p>
+                <p class="fade-in-up text-2xl text-white mt-8 text-center">Everyone loves you.</p>
+                <p class="fade-in-up text-2xl text-pink-300 mt-2 text-center">And we kittens love you too.</p>
+                <p class="fade-in-up font-cinzel text-3xl text-gold-glow text-center mt-8 drop-shadow-lg">Never stop smiling. ❤️</p>
+            </div>
+        </div>
+        
+        <div id="final-cats-container" class="absolute bottom-5 md:bottom-10 w-full flex justify-center space-x-2 md:space-x-6 opacity-0 transition-opacity duration-2000 z-10 pointer-events-none scale-90 md:scale-150 transform-gpu">
+            <!-- Cats added dynamically -->
+        </div>
+    </section>
+
+    <!-- Foreground Interaction Canvas (Confetti, Cursor Sparks) -->
+    <canvas id="interaction-canvas"></canvas>
+
+    <script>
+        const $ = (s) => document.querySelector(s);
+        const $$ = (s) => document.querySelectorAll(s);
+        
+        let currentScreen = 'intro';
+        let width = window.innerWidth;
+        let height = window.innerHeight;
+
+        // --- Audio Engine (Using HTML DOM Element for maximum browser compatibility) ---
+        const mainMusic = document.getElementById('main-music');
+        mainMusic.volume = 0.5;
+        
+        // --- Sound Effects Engine ---
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+
+        function playSoundEffect(type) {
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            if (type === 'purr') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.3);
+                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+            } else if (type === 'pop') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.1);
+                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+            } else if (type === 'error') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(200, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.2);
+                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+            }
+        }
+
+        const bgCanvas = $('#bg-canvas');
+        const bgCtx = bgCanvas.getContext('2d');
+        const iCanvas = $('#interaction-canvas');
+        const iCtx = iCanvas.getContext('2d');
+        
+        let stars = [], magicParticles = [], confettis = [], interactionSparks = [];
+
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            bgCanvas.width = width; bgCanvas.height = height;
+            iCanvas.width = width; iCanvas.height = height;
+            const mCanvas = $('#mini-game-canvas');
+            if(mCanvas) { mCanvas.width = width; mCanvas.height = height; }
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        function initStars() {
+            stars = [];
+            for(let i=0; i<150; i++) {
+                stars.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    r: Math.random() * 1.5,
+                    o: Math.random(),
+                    d: Math.random() * 0.02 + 0.005
+                });
+            }
+        }
+
+        function createSpark(x, y, color = '#ffb6c1') {
+            interactionSparks.push({
+                x, y,
+                vx: (Math.random() - 0.5) * 4,
+                vy: (Math.random() - 0.5) * 4 - 1,
+                life: 1,
+                c: color,
+                s: Math.random() * 4 + 2
+            });
+        }
+
+        function drawBackground() {
+            bgCtx.clearRect(0, 0, width, height);
+            
+            // Stars
+            stars.forEach(s => {
+                s.o += s.d;
+                if(s.o > 1 || s.o < 0) s.d *= -1;
+                bgCtx.beginPath();
+                bgCtx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+                bgCtx.fillStyle = `rgba(255, 255, 255, ${Math.abs(s.o)})`;
+                bgCtx.fill();
+            });
+
+            // Magic floating particles
+            for(let i=magicParticles.length-1; i>=0; i--) {
+                let p = magicParticles[i];
+                p.x += p.vx; p.y += p.vy;
+                p.life -= 0.01;
+                if (p.life > 0) {
+                    bgCtx.beginPath();
+                    // Ensure radius is strictly positive to prevent DOMException
+                    let radius = Math.max(0.1, p.s * p.life);
+                    bgCtx.arc(p.x, p.y, radius, 0, Math.PI*2);
+                    bgCtx.fillStyle = p.c;
+                    bgCtx.globalAlpha = p.life;
+                    bgCtx.fill();
+                    bgCtx.globalAlpha = 1;
+                } else {
+                    magicParticles.splice(i,1);
+                }
+            }
+            requestAnimationFrame(drawBackground);
+        }
+
+        function drawInteractions() {
+            iCtx.clearRect(0, 0, width, height);
+            
+            // Cursor Sparks
+            for(let i=interactionSparks.length-1; i>=0; i--) {
+                let s = interactionSparks[i];
+                s.x += s.vx; s.y += s.vy;
+                s.life -= 0.03;
+                if (s.life > 0) {
+                    iCtx.beginPath();
+                    let radius = Math.max(0.1, s.s * s.life);
+                    iCtx.arc(s.x, s.y, radius, 0, Math.PI*2);
+                    iCtx.fillStyle = s.c;
+                    iCtx.globalAlpha = s.life;
+                    iCtx.fill();
+                    iCtx.globalAlpha = 1;
+                } else {
+                    interactionSparks.splice(i,1);
+                }
+            }
+
+            // Confetti
+            for(let i=confettis.length-1; i>=0; i--) {
+                let c = confettis[i];
+                c.x += c.vx; c.y += c.vy; c.vy += 0.3; // gravity
+                c.rot += c.rS;
+                
+                iCtx.save();
+                iCtx.translate(c.x, c.y);
+                iCtx.rotate(c.rot * Math.PI / 180);
+                iCtx.fillStyle = c.c;
+                iCtx.fillRect(-c.s/2, -c.s/2, c.s, c.s);
+                iCtx.restore();
+                
+                if(c.y > height + 50) confettis.splice(i, 1);
+            }
+
+            requestAnimationFrame(drawInteractions);
+        }
+
+        // Mouse trail
+        document.addEventListener('mousemove', (e) => {
+            if(Math.random() > 0.5) createSpark(e.clientX, e.clientY);
+        });
+        document.addEventListener('touchmove', (e) => {
+            if(Math.random() > 0.5) createSpark(e.touches[0].clientX, e.touches[0].clientY);
+        }, {passive: true});
+
+        initStars();
+        drawBackground();
+        drawInteractions();
+
+        function switchScreen(toId) {
+            const current = $('.screen.active');
+            if(current) current.classList.remove('active');
+            $(`#${toId}`).classList.add('active');
+            currentScreen = toId;
+        }
+
+        // Start button logic
+        $('#btn-start-music').addEventListener('click', () => {
+            // Play immediately using the DOM element and gracefully catch any errors
+            const playPromise = mainMusic.play();
+            
+            if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                    console.warn("Audio play failed (Source might be unsupported or missing):", error);
+                    // We safely catch the error so it doesn't crash the JS engine.
+                    // The site will still smoothly continue visually.
+                });
+            }
+
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            
+            $('#start-overlay').style.opacity = '0';
+            setTimeout(() => {
+                $('#start-overlay').style.display = 'none';
+                switchScreen('intro');
+                startIntroSequence();
+            }, 800);
+        });
+
+        function startIntroSequence() {
+            const lines = $$('#intro .text-line');
+            let delay = 500;
+            
+            lines.forEach((line, index) => {
+                setTimeout(() => {
+                    line.style.opacity = '1';
+                    line.style.transform = 'translateY(0)';
+                    
+                    setTimeout(() => {
+                        if (index < lines.length - 1) {
+                            line.style.opacity = '0';
+                            line.style.transform = 'translateY(-20px)';
+                        }
+                    }, 2500); 
+                }, delay);
+                delay += 3500;
+            });
+
+            setTimeout(() => {
+                const btn = $('#btn-enter-garden');
+                btn.style.opacity = '1';
+                btn.style.transform = 'translateY(0)';
+            }, delay - 1000);
+        }
+
+        $('#btn-enter-garden').addEventListener('click', () => {
+            for(let i=0; i<30; i++) createSpark(width/2, height/2 + 100, '#fff');
+            switchScreen('garden');
+            initGarden();
+        });
+
+
+        let collectedFlowers = 0;
+        const totalFlowersNeeded = 3;
+        let isCatPresenting = false;
+
+        const catCompliments = [
+            "Safae, you have the cutest smile! 🌸",
+            "The flowers are jealous of you! 🌷",
+            "You light up every room! ✨",
+            "Your kindness is your true beauty! 💖",
+            "You are prettier than spring! 🌺",
+            "You make our hearts purr! 🐾"
+        ];
+
+        // --- Redesigned, Cuter Cats ---
+        function getCatSVG(color1, color2, idPrefix) {
+            // A much more detailed, expressive cat SVG
+            return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <!-- Tail -->
+                <path d="M70 70 Q 90 70, 85 45 Q 80 30, 95 35" stroke="${color1}" stroke-width="8" stroke-linecap="round" fill="none" class="animate-tail" style="transform-origin: 70px 70px; animation: tail-wag 3s infinite ease-in-out;"/>
+                
+                <!-- Body -->
+                <ellipse cx="50" cy="65" rx="30" ry="25" fill="${color1}" />
+                <ellipse cx="50" cy="75" rx="25" ry="15" fill="rgba(0,0,0,0.1)" /> <!-- Shadow -->
+                
+                <!-- Head -->
+                <circle cx="50" cy="40" r="28" fill="${color1}" />
+                
+                <!-- Ears -->
+                <polygon points="25,30 20,5 40,15" fill="${color1}" />
+                <polygon points="28,27 24,10 37,17" fill="${color2}" /> <!-- Inner Ear -->
+                
+                <polygon points="75,30 80,5 60,15" fill="${color1}" />
+                <polygon points="72,27 76,10 63,17" fill="${color2}" /> <!-- Inner Ear -->
+                
+                <!-- Face Details -->
+                <circle cx="38" cy="38" r="4" fill="#1a1a2e" /> <!-- Left Eye -->
+                <circle cx="62" cy="38" r="4" fill="#1a1a2e" /> <!-- Right Eye -->
+                
+                <!-- Eye Highlights -->
+                <circle cx="37" cy="37" r="1.5" fill="white" />
+                <circle cx="61" cy="37" r="1.5" fill="white" />
+                
+                <!-- Nose & Mouth -->
+                <polygon points="48,45 52,45 50,48" fill="#ff7da9" />
+                <path d="M 50 48 Q 45 53 40 50 M 50 48 Q 55 53 60 50" stroke="#1a1a2e" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+                
+                <!-- Whiskers -->
+                <path d="M 30 42 L 15 38 M 30 46 L 12 45 M 30 50 L 15 52" stroke="rgba(255,255,255,0.7)" stroke-width="1.5" stroke-linecap="round"/>
+                <path d="M 70 42 L 85 38 M 70 46 L 88 45 M 70 50 L 85 52" stroke="rgba(255,255,255,0.7)" stroke-width="1.5" stroke-linecap="round"/>
+                
+                <!-- Cheeks -->
+                <circle cx="32" cy="45" r="5" fill="#ff7da9" opacity="0.4" />
+                <circle cx="68" cy="45" r="5" fill="#ff7da9" opacity="0.4" />
+                
+                <!-- Paws -->
+                <ellipse cx="35" cy="85" rx="8" ry="6" fill="${color1}" />
+                <ellipse cx="65" cy="85" rx="8" ry="6" fill="${color1}" />
+                
+                <!-- Held Flower (Hidden initially) -->
+                <g class="held-flower" style="opacity:0; transition: opacity 0.5s ease-in-out, transform 0.5s;" transform="translate(45, 60)">
+                    <!-- Stem -->
+                    <path d="M 5 15 Q 8 25 5 35" stroke="#4ade80" stroke-width="3" fill="none" stroke-linecap="round"/>
+                    <!-- Leaves -->
+                    <path d="M 5 25 Q 0 20 5 20 Z" fill="#4ade80"/>
+                    <path d="M 5 28 Q 10 23 5 23 Z" fill="#4ade80"/>
+                    <!-- Petals -->
+                    <circle cx="5" cy="5" r="7" fill="#ff4d8f" />
+                    <circle cx="0" cy="10" r="7" fill="#ff7da9" />
+                    <circle cx="10" cy="10" r="7" fill="#ff7da9" />
+                    <circle cx="5" cy="15" r="7" fill="#ff4d8f" />
+                    <!-- Center -->
+                    <circle cx="5" cy="10" r="4" fill="#fbbf24" />
+                </g>
+            </svg>
+            <style>
+                @keyframes tail-wag {
+                    0%, 100% { transform: rotate(0deg); }
+                    50% { transform: rotate(15deg); }
+                }
+            </style>`;
+        }
+
+        function initGarden() {
+            const container = $('#cats-container');
+            container.innerHTML = '';
+            
+            setTimeout(() => {
+                const instr = $('#garden-instruction');
+                if(instr) instr.style.opacity = '0';
+            }, 5000);
+
+            // Create distinct colors for the kittens
+            const catStyles = [
+                { c1: '#ffffff', c2: '#ffd1dc' }, // White/Pink
+                { c1: '#ffb347', c2: '#ffffff' }, // Orange/White
+                { c1: '#778899', c2: '#ffffff' }, // Grey/White
+                { c1: '#ffdab9', c2: '#ffa07a' }, // Peach
+                { c1: '#ffffff', c2: '#d3d3d3' }  // White/Grey
+            ];
+
+            for (let i = 0; i < 5; i++) {
+                const catDiv = document.createElement('div');
+                catDiv.className = 'cat-container';
+                catDiv.style.left = `${15 + Math.random() * 60}%`;
+                catDiv.style.top = `${25 + Math.random() * 55}%`;
+                
+                const style = catStyles[i];
+                
+                catDiv.innerHTML = `
+                    <div class="cat-svg animate-float" style="animation-delay: ${Math.random()*2}s">${getCatSVG(style.c1, style.c2, 'cat'+i)}</div>
+                    <div class="cat-compliment">${catCompliments[i]}</div>
+                `;
+                
+                let hasGivenFlower = false;
+                
+                catDiv.addEventListener('mouseenter', () => playSoundEffect('purr'));
+                catDiv.addEventListener('click', function(e) {
+                    if (hasGivenFlower || isCatPresenting) return;
+                    isCatPresenting = true;
+                    hasGivenFlower = true;
+                    
+                    playSoundEffect('purr');
+                    for(let j=0; j<15; j++) createSpark(e.clientX, e.clientY, '#ff69b4');
+
+                    this.querySelector('.held-flower').style.opacity = '1';
+                    this.querySelector('.held-flower').style.transform = 'translate(45px, 40px) scale(1.2)';
+                    
+                    const rect = this.getBoundingClientRect();
+                    const centerX = width/2 - rect.width/2;
+                    const centerY = height/2 - rect.height/2;
+                    
+                    this.style.left = `${centerX}px`;
+                    this.style.top = `${centerY}px`;
+                    this.style.zIndex = '50';
+                    
+                    const scaleValue = width < 768 ? 1.2 : 1.5;
+                    this.style.transform = `scale(${scaleValue})`;
+                    
+                    setTimeout(() => {
+                        this.querySelector('.cat-compliment').style.opacity = '1';
+                        this.querySelector('.cat-compliment').style.transform = 'translateY(0) scale(1)';
+                        
+                        setTimeout(() => {
+                            this.querySelector('.held-flower').style.opacity = '0';
+                            playSoundEffect('pop');
+                            collectedFlowers++;
+                            $('#flower-count').innerText = collectedFlowers;
+                            $('#bouquet-container').style.transform = `scale(${0.8 + (collectedFlowers * 0.2)})`;
+                            
+                            this.style.opacity = '0';
+                            isCatPresenting = false;
+                            
+                            if (collectedFlowers >= totalFlowersNeeded) {
+                                $('#btn-start-game').style.display = 'block';
+                                setTimeout(() => {
+                                    $('#btn-start-game').style.opacity = '1';
+                                    $('#btn-start-game').style.transform = 'translateY(0)';
+                                }, 100);
+                            }
+                        }, 2800); // Give Safae more time to read the cute compliment
+                    }, 1200);
+                });
+                container.appendChild(catDiv);
+            }
+        }
+
+
+        $('#btn-start-game').addEventListener('click', () => {
+            $('#mini-game-wrapper').style.display = 'block';
+            setTimeout(() => {
+                $('#mini-game-wrapper').style.visibility = 'visible';
+                $('#mini-game-wrapper').style.opacity = '1';
+                $('#garden').style.filter = 'blur(10px)';
+            }, 50);
+        });
+
+        const mCanvas = $('#mini-game-canvas');
+        const mCtx = mCanvas.getContext('2d');
+        let gameLoop, gameTimer;
+
+        $('#btn-actually-start').addEventListener('click', () => {
+            $('#game-ui').style.display = 'none';
+            mCanvas.style.visibility = 'visible';
+            mCanvas.style.opacity = '1';
+            startMiniGame();
+        });
+
+        function startMiniGame() {
+            let score = 0, time = 30, playing = true, items = [];
+            
+            // Responsive Bowl coordinates
+            const bowlW = width < 768 ? 80 : 120;
+            const bowlH = width < 768 ? 35 : 50;
+            const bowl = { x: width/2, y: height - (width < 768 ? 80 : 100), w: bowlW, h: bowlH };
+            let targetX = bowl.x;
+
+            function move(e) {
+                if(!playing) return;
+                targetX = e.touches ? e.touches[0].clientX : e.clientX;
+            }
+            const wrapper = $('#mini-game-wrapper');
+            wrapper.addEventListener('mousemove', move);
+            wrapper.addEventListener('touchmove', move, {passive: true});
+
+            gameTimer = setInterval(() => {
+                time--;
+                if(time <= 0) endGame(score >= 5);
+            }, 1000);
+
+            function spawnItem() {
+                if(!playing) return;
+                const sweets = ['🍓', '🧁', '🍫', '✨'];
+                const bads = ['🌶️', '🧅'];
+                const isSweet = Math.random() > 0.35; 
+                
+                items.push({
+                    x: Math.random() * (width - 60) + 30,
+                    y: -40, r: 25,
+                    speed: Math.random() * 3 + 3 + (score * 0.2),
+                    type: isSweet ? 'sweet' : 'bad',
+                    emoji: isSweet ? sweets[Math.floor(Math.random()*sweets.length)] : bads[Math.floor(Math.random()*bads.length)],
+                    rot: 0, rotSpeed: (Math.random()-0.5)*0.1
+                });
+                setTimeout(spawnItem, Math.max(300, 900 - (score * 50)));
+            }
+            spawnItem();
+
+            function update() {
+                if(!playing) return;
+                
+                bowl.x += (targetX - bowl.x) * 0.25;
+                bowl.x = Math.max(bowl.w/2, Math.min(width - bowl.w/2, bowl.x));
+
+                mCtx.clearRect(0, 0, width, height);
+
+                // UI Elements
+                const uiFontSize = width < 768 ? 16 : 24;
+                mCtx.fillStyle = 'white';
+                mCtx.font = `bold ${uiFontSize}px Poppins`;
+                mCtx.textAlign = 'left';
+                mCtx.fillText(`Time: ${time}s`, 20, 40);
+                mCtx.textAlign = 'right';
+                mCtx.fillText(`Sweets: ${score}/5`, width - 20, 40);
+
+                // Draw Custom Bowl
+                mCtx.save();
+                mCtx.fillStyle = 'rgba(255, 230, 240, 0.9)';
+                mCtx.shadowBlur = 20; mCtx.shadowColor = '#ff69b4';
+                mCtx.beginPath();
+                mCtx.moveTo(bowl.x - bowl.w/2, bowl.y);
+                mCtx.lineTo(bowl.x + bowl.w/2, bowl.y);
+                mCtx.bezierCurveTo(bowl.x + bowl.w/2, bowl.y + bowl.h, bowl.x - bowl.w/2, bowl.y + bowl.h, bowl.x - bowl.w/2, bowl.y);
+                mCtx.fill();
+                mCtx.strokeStyle = '#ff9eaa'; mCtx.lineWidth = 4; mCtx.stroke();
+                mCtx.restore();
+
+                // Items
+                for(let i = items.length - 1; i >= 0; i--) {
+                    let it = items[i];
+                    it.y += it.speed; it.rot += it.rotSpeed;
+                    
+                    mCtx.save();
+                    mCtx.translate(it.x, it.y); mCtx.rotate(it.rot);
+                    const itemFontSize = width < 768 ? 28 : 35;
+                    mCtx.font = `${itemFontSize}px Arial`; 
+                    mCtx.textAlign = 'center'; mCtx.textBaseline = 'middle';
+                    mCtx.fillText(it.emoji, 0, 0);
+                    mCtx.restore();
+
+                    // Collision
+                    if (it.y + it.r > bowl.y && it.y < bowl.y + bowl.h && it.x > bowl.x - bowl.w/2 - 10 && it.x < bowl.x + bowl.w/2 + 10) {
+                        if (it.type === 'sweet') {
+                            score++; playSoundEffect('pop');
+                            for(let k=0; k<5; k++) createSpark(it.x, it.y, '#fff');
+                        } else {
+                            score = Math.max(0, score - 2); playSoundEffect('error');
+                            mCanvas.style.transform = `translateX(${Math.random()>0.5?10:-10}px)`;
+                            setTimeout(()=>mCanvas.style.transform='none', 50);
+                        }
+                        items.splice(i, 1);
+                    } else if (it.y > height + 50) {
+                        items.splice(i, 1);
+                    }
+                }
+                gameLoop = requestAnimationFrame(update);
+            }
+            update();
+
+            function endGame(won) {
+                playing = false; clearInterval(gameTimer); cancelAnimationFrame(gameLoop);
+                wrapper.removeEventListener('mousemove', move); wrapper.removeEventListener('touchmove', move);
+
+                mCtx.fillStyle = 'rgba(0,0,0,0.8)';
+                mCtx.fillRect(0, 0, width, height);
+                mCtx.textAlign = 'center';
+                
+                if (won) {
+                    mCtx.fillStyle = '#ffb6c1';
+                    const winFontSize = width < 768 ? 24 : 40;
+                    mCtx.font = `bold ${winFontSize}px Cinzel`;
+                    
+                    if (width < 768) {
+                        mCtx.fillText("Cake Baked", width/2, height/2 - 20);
+                        mCtx.fillText("Successfully! 🎂", width/2, height/2 + 20);
+                    } else {
+                        mCtx.fillText("Cake Baked Successfully! 🎂", width/2, height/2);
+                    }
+                    
+                    fireConfetti();
+                    
+                    setTimeout(() => {
+                        $('#mini-game-wrapper').style.opacity = '0';
+                        setTimeout(() => {
+                            $('#mini-game-wrapper').style.display = 'none';
+                            switchScreen('finale');
+                            triggerFinale();
+                        }, 1000);
+                    }, 3000);
+                } else {
+                    mCtx.fillStyle = 'white'; 
+                    const loseFontSize = width < 768 ? 20 : 30;
+                    mCtx.font = `bold ${loseFontSize}px Poppins`;
+                    mCtx.fillText("Need more sweets...", width/2, height/2 - 40);
+                    
+                    // Re-bind click exactly once to try again
+                    const btn = $('#btn-actually-start');
+                    btn.innerText = "Try Again 🐾";
+                    $('#game-ui').style.display = 'flex';
+                    
+                    // Remove old listener and add new one to prevent double execution
+                    const newBtn = btn.cloneNode(true);
+                    btn.parentNode.replaceChild(newBtn, btn);
+                    newBtn.addEventListener('click', () => {
+                        $('#game-ui').style.display = 'none';
+                        startMiniGame();
+                    });
+                }
+            }
+        }
+
+        function fireConfetti() {
+            const colors = ['#ff69b4', '#ffd700', '#ffb6c1', '#fff'];
+            for(let i=0; i<100; i++) {
+                confettis.push({
+                    x: width / 2, y: height + 10,
+                    vx: (Math.random() - 0.5) * 20, vy: (Math.random() * -15) - 10,
+                    s: Math.random() * 8 + 4,
+                    c: colors[Math.floor(Math.random() * colors.length)],
+                    rot: Math.random() * 360, rS: (Math.random() - 0.5) * 10
+                });
+            }
+        }
+
+        function triggerFinale() {
+            // Magical fireworks effect in background
+            setInterval(() => {
+                if(currentScreen === 'finale' && Math.random() > 0.3) {
+                    const fx = Math.random() * width;
+                    const fy = Math.random() * height * 0.5; 
+                    const color = ['#ff69b4', '#ffd700', '#fff', '#ffb6c1', '#8b5cf6'][Math.floor(Math.random()*5)];
+                    for(let i=0; i<30; i++) {
+                        magicParticles.push({
+                            x: fx, y: fy,
+                            vx: (Math.random() - 0.5) * 8, vy: (Math.random() - 0.5) * 8,
+                            life: 1, c: color, s: Math.random() * 4 + 1
+                        });
+                    }
+                }
+            }, 600);
+
+            // Animate text lines sequentially
+            const lines = $$('.fade-in-up');
+            let delay = 1500;
+            lines.forEach((line) => {
+                setTimeout(() => {
+                    line.classList.add('visible');
+                }, delay);
+                delay += 2500;
+            });
+
+            // Show final cats waving
+            setTimeout(() => {
+                const fcContainer = $('#final-cats-container');
+                fcContainer.innerHTML = ''; // Clear just in case
+                fcContainer.innerHTML += `<div class="cat-svg animate-float" style="animation-delay: 0s">${getCatSVG('#ffffff', '#ffd1dc', 'fc1')}</div>`;
+                fcContainer.innerHTML += `<div class="cat-svg animate-float" style="animation-delay: 0.5s">${getCatSVG('#ffb347', '#ffffff', 'fc2')}</div>`;
+                fcContainer.innerHTML += `<div class="cat-svg animate-float" style="animation-delay: 1s">${getCatSVG('#778899', '#ffffff', 'fc3')}</div>`;
+                
+                fcContainer.style.opacity = '1';
+                fireConfetti();
+                setInterval(fireConfetti, 3000); // Keep firing confetti at the end!
+            }, delay + 1000);
+        }
+
+    </script>
+</body>
+</html>
